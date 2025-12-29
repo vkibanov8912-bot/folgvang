@@ -10,6 +10,10 @@ import json
 import logging
 from threading import Lock
 import os
+import eventlet
+
+# Используем eventlet для асинхронности
+eventlet.monkey_patch()
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +26,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'folkvang-secret-key-202
 socketio = SocketIO(
     app, 
     cors_allowed_origins="*",
-    async_mode='gevent',
+    async_mode='eventlet',
     logger=True,
     engineio_logger=True
 )
@@ -184,6 +188,7 @@ def report_kill():
 @app.route('/api/reset', methods=['POST'])
 def reset_all():
     """Сбросить всех боссов (админ)"""
+    # Простая проверка токена
     auth_token = request.headers.get('X-Auth-Token')
     expected_token = os.environ.get('ADMIN_TOKEN', 'admin123')
     
@@ -265,8 +270,9 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     
     logger.info("🚀 Запуск Folkvang Boss Tracker Server...")
-    logger.info(f"📡 WebSocket сервер работает на порту {port}")
-    logger.info(f"🔧 Используется worker: gevent")
+    logger.info(f"📡 WebSocket сервер: wss://ваш-проект.onrender.com")
+    logger.info(f"🌐 HTTP сервер: https://ваш-проект.onrender.com")
+    logger.info(f"🔧 Port: {port}")
     
     # Запускаем сервер
     socketio.run(
@@ -274,6 +280,5 @@ if __name__ == '__main__':
         host='0.0.0.0',
         port=port,
         debug=False,
-        log_output=True,
-        allow_unsafe_werkzeug=True
+        log_output=True
     )
